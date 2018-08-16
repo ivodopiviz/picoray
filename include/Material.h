@@ -15,10 +15,12 @@ float schlick(float cosine, float ref_idx) {
 
 bool refract(const Vector3& v, const Vector3& n, float ni_over_nt, Vector3& refracted) {
     Vector3 uv = unit_vector(v);
-    float dt = dot(uv, n);
+    Vector3 un = unit_vector(n);
+
+    float dt = dot(uv, un);
     float discriminant = 1.0 - ni_over_nt*ni_over_nt*(1-dt*dt);
     if (discriminant > 0) {
-        refracted = ni_over_nt*(uv - n*dt) - n*sqrt(discriminant);
+        refracted = ni_over_nt*(uv - dt*un) - sqrt(discriminant)*un;
         return true;
     }
     else
