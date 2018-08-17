@@ -90,7 +90,7 @@ class dielectric : public Material {
              }
              else {
                   outward_normal = rec.normal;
-                  ni_over_nt = 1.0 / ref_idx;
+                  ni_over_nt = 1.0f / ref_idx;
                   cosine = -dot(r_in.direction(), rec.normal) / r_in.direction().length();
              }
              if (refract(r_in.direction(), outward_normal, ni_over_nt, refracted))
