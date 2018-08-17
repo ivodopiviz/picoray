@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <float.h>
+#include <vector>
 #include <SDL.h>
 
 #include "Random.h"
@@ -98,24 +99,6 @@ int main(int argc, char* args[]) {
 
 	Camera cam(lookfrom, lookat, Vector3(0,1,0), 20, float(nx)/float(ny), aperture, dist_to_focus);
 
-	/*for (int j = ny-1; j >= 0; j--) {
-		for (int i = 0; i < nx; i++) {
-			Vector3 col(0, 0, 0);
-			for (int s=0; s < ns; s++) {
-				float u = float(i + drand48()) / float(nx);
-				float v = float(j + drand48()) / float(ny);
-				Ray r = cam.getRay(u, v);
-				Vector3 p = r.point_at_parameter(2.0);
-				col += color(r, world,0);
-			}
-			col /= float(ns);
-			col = Vector3( sqrt(col[0]), sqrt(col[1]), sqrt(col[2]) );
-			int ir = int(255.99*col[0]);
-			int ig = int(255.99*col[1]);
-			int ib = int(255.99*col[2]);
-		}
-	}*/
-
 	//Main loop flag 
 	bool quit = false; 
 	bool tracing = true;
@@ -126,9 +109,10 @@ int main(int argc, char* args[]) {
 	int j = ny - 1;
 	int i = 0;
 
-	while (!quit) {
-		//SDL_RenderClear(renderer);
+	std::vector<Uint8> pixels(nx * ny * 4, 0);
+	SDL_Texture* buffer = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING, nx, ny);
 
+	while (!quit) {
 		while (SDL_PollEvent(&e) != 0)
 		{
 			if (e.type == SDL_QUIT)
@@ -153,8 +137,13 @@ int main(int argc, char* args[]) {
 			Uint8 ig = int(255.99*col[1]);
 			Uint8 ib = int(255.99*col[2]);
 
-			SDL_SetRenderDrawColor(renderer, ir, ig, ib, 255);
-			SDL_RenderDrawPoint(renderer, i, ny - j);
+			const unsigned int offset = (nx * 4 * (ny - j)) + i * 4;
+			pixels[offset + 0] = SDL_ALPHA_OPAQUE;  // a
+			pixels[offset + 1] = ir;				// r
+			pixels[offset + 2] = ig;				// g
+			pixels[offset + 3] = ib;				// b
+
+			SDL_UpdateTexture(buffer, NULL, &pixels[0], nx * 4);
 
 			i++;
 
@@ -171,9 +160,13 @@ int main(int argc, char* args[]) {
 			}
 		}
 
+		SDL_RenderCopy(renderer, buffer, NULL, NULL);
 		SDL_RenderPresent(renderer);
 	}
 
+	pixels.clear();
+
+	SDL_DestroyTexture(buffer);
 	SDL_DestroyRenderer(renderer);
 	SDL_DestroyWindow(window);
 
